@@ -1,0 +1,122 @@
+// This is an auto generated file created from QB code generator v1.0.0
+#include "commonlibs/core/utils/Defines.h"
+#include "commonlibs/core/utils/ObjectStore.h"
+#include "mktdata/msgs/${fname}Message.h"
+
+#include "mktdata/include/qb_knk.h"
+#include "externaldeps/kdb/include/k.h"
+
+#include <time.h>
+
+using namespace std;
+using namespace QB::MktData::${fname};
+
+#define SET_NULL(v) v = qb_null<decltype(v)>::value
+#define STR_NULL(v) v = ""
+#define KSTR(x)  sn(const_cast<S>(x.c_str()), x.size())
+#define KTIME(t) (t - 10957LL*86400LL*1000000000LL)
+#define KINT(v)  (is_qb_null(v) ? ni : v)
+#define KDBL(v)  (is_qb_null(v) ? nf : v)
+#define KLONG(v) (is_qb_null(v) ? nj : v)
+
+%for name in modules:
+${name}::${name}()
+{
+  clear();
+}
+
+void ${name}::clear()
+{
+%for field in modules[name]:
+ %if field.keys()[0] == 'string':
+  STR_NULL(${field.values()[0]});
+ %else:
+  SET_NULL(${field.values()[0]});
+ %endif
+%endfor
+}
+
+K ${name}::to_k(vector<QMessage*>& v) const
+{
+  int size = (int) v.size();
+  K x = qb_knk(
+%for field in modules[name]:
+        %if field.keys()[0] == 'int32_t' or field.keys()[0] == 'uint32_t':
+               ktn(KI, size),
+        %elif field.keys()[0] == 'int64_t' or field.keys()[0] == 'uint64_t':
+               ktn(KJ, size),
+        %elif field.keys()[0] == 'double':
+               ktn(KF, size),
+        %elif field.keys()[0] == 'string':
+               ktn(KS, size),
+        %elif field.keys()[0] == 'time_t':
+               ktn(KP, size),
+        %endif
+%endfor
+             );
+
+  for (int i = 0; i < size; i++)
+    {
+      ${fname}::${name}* q = (${fname}::${name}*)v[i];
+
+%for field in modules[name]:
+   %if field.keys()[0] == 'int32_t' or field.keys()[0] =='uint32_t':
+      kI(xK[${loop.index}])[i] = KINT(q->${field.values()[0]});
+   %elif field.keys()[0] == 'int64_t' or field.keys()[0] =='uint64_t':
+      kJ(xK[${loop.index}])[i] = KLONG(q->${field.values()[0]});
+   %elif field.keys()[0] == 'double':
+      kF(xK[${loop.index}])[i] = KDBL(q->${field.values()[0]});
+   %elif field.keys()[0] == 'string':
+      kS(xK[${loop.index}])[i] = KSTR(q->${field.values()[0]});
+   %elif field.keys()[0] == 'time_t':
+      kJ(xK[${loop.index}])[i] = KTIME(q->${field.values()[0]});
+   %endif
+%endfor
+    }
+  return x;
+}
+
+void ${name}::print() const
+{
+  LOG_INFO(tableName()<<": "
+%for field in modules[name]:
+           << ${field.values()[0]} << ", "
+%endfor
+           ) ;
+}
+
+ostream& ${name}::operator >> (ostream& os)
+{
+  os<<"tablename: "<<tableName()<<", ";
+  return os;
+}
+
+void ${name}::release()
+{
+  clear();
+  Core::ObjectStore::release(this);
+}
+
+bool QB::MktData::${fname}::put(QB::Core::IOPacket& p, const ${name}& v)
+{
+  bool ret = true;
+
+%for field in modules[name]:
+  ret&=put(p,v.${field.values()[0]});
+%endfor
+
+  return ret;
+}
+
+bool QB::MktData::${fname}::get(QB::Core::IOPacket& p, ${name}& v)
+{
+  bool ret = true;
+
+%for field in modules[name]:
+  ret&=get(p,v.${field.values()[0]});
+%endfor
+
+  return ret;
+}
+
+%endfor

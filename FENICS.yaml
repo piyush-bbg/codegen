@@ -1,0 +1,49 @@
+AddOrder:
+    - int32_t      : seq_num
+    - string       : symbol
+    - int32_t      : exchange_seq_num
+    - time_t       : source_time
+    - uint64_t     : order_id
+    - string       : side
+    - int32_t      : qty
+    - double       : price
+    - time_t       : recvd_time
+OrderExecuted:
+    - int32_t      : seq_num
+    - string       : symbol
+    - int32_t      : exchange_seq_num
+    - time_t       : source_time
+    - uint64_t     : order_id
+    - int32_t      : filled_qty
+    - uint64_t     : trade_id
+    - double       : trade_price
+    - time_t       : recvd_time
+OrderDeleted:
+    - int32_t      : seq_num
+    - string       : symbol
+    - int32_t      : exchange_seq_num
+    - time_t       : source_time
+    - uint64_t     : order_id
+    - time_t       : recvd_time
+OrderReplaced:
+    - int32_t      : seq_num
+    - string       : symbol
+    - int32_t      : exchange_seq_num
+    - time_t       : source_time
+    - uint64_t     : order_id
+    - int32_t      : qty
+    - double       : price
+    - time_t       : recvd_time
+Quote:
+    - int32_t      : seq_num
+    - string       : symbol
+    - time_t       : source_time
+    - string       : side
+    - int32_t      : siz
+    - double       : prc
+    - string       : upd
+    - time_t       : recvd_time
+Trade:
+
+
+

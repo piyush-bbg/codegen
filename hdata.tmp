@@ -1,0 +1,43 @@
+// This is an auto generated file created from QB code generator v1.0.0
+#ifndef __QB_MKTDATA_${fname}MESSAGE_H
+#define __QB_MKTDATA_${fname}MESSAGE_H
+
+#include <unordered_map>
+#include <string>
+#include <vector>
+
+#include "core/utils/Timestamp.h"
+#include "mktdata/msgs/QMessage.h"
+#include "mktdata/msgs/Messages.h"
+
+using namespace QB::Core;
+using namespace std;
+
+namespace QB { namespace MktData { namespace ${fname} {
+
+typedef int64_t time_t;
+
+% for name in modules:
+struct ${name} : public QMessage
+{
+%for field in modules[name]:
+  ${field.keys()[0]} ${field.values()[0]};
+%endfor
+
+  ${name}();
+  void clear();
+
+  virtual const char* tableName() const;
+  virtual K           to_k(vector<QMessage*>& v) const;
+  virtual void        print()     const;
+  virtual void        release();
+  ostream& operator >> (ostream& os);
+};
+bool put(IOPacket& p, const ${name}& v);
+bool get(IOPacket& p, ${name}& v);
+ostream& operator << (ostream& os,
+                      const QB::MktData::${fname}::${name}& obj);
+
+% endfor
+}}} // namespace QB::MktData::Core
+#endif
