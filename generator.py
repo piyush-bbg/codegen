@@ -1,15 +1,15 @@
-#!/usr/bin/python27
+#!/usr/bin/python
 import argparse
 import yaml
 import os
 
 from mako.template import Template
 from mako.lookup import TemplateLookup
-#from colorama import Fore, Back, Style
+from colorama import Fore, Back, Style
 
 def comment(str):
-#    print(Fore.GREEN + str + Fore.RESET )
-    print("*****" + str + "*****" )
+    print(Fore.GREEN + str + Fore.RESET )
+#   print("*****" + str + "*****" )
 
 class Generator:
     def __init__(self, package_dir, out_dir = ""):
@@ -36,17 +36,17 @@ def generate(fname, name):
     print "YAML file name: " + fname
     module_defs = yaml.load(open(fname, 'r').read())
     print yaml.dump(module_defs)
-    proj_dir = os.getcwd()
-    out_dir = os.path.join(proj_dir, 'out')
+    # proj_dir = os.getcwd()
+    # out_dir = os.path.join(proj_dir, 'out')
     generator = Generator(os.getcwd())
     comment('Generating file <<< ' + name + "Messages.h")
     generator.outputs(name + "Messages.h")
-    generator.template('hdata', modules=module_defs, fname=name)
+    generator.template('hdata', attributes=module_defs, fname=name)
     comment('End Generating file >>> ' + name + "Messages.h")
 
     comment('Generating file <<< ' + name + "Messages.cpp")
     generator.outputs(name + "Messages.cpp")
-    generator.template('cppdata', modules=module_defs, fname=name)
+    generator.template('cppdata', attributes=module_defs, fname=name)
     comment('End Generating file >>> ' + name + "Messages.cpp")
 
 parser = argparse.ArgumentParser(description='QB Code Generator v1.0.0')

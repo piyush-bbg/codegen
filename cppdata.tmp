@@ -1,8 +1,7 @@
-// This is an auto generated file created from QB code generator v1.0.0
-#include "commonlibs/core/utils/Defines.h"
-#include "commonlibs/core/utils/ObjectStore.h"
 #include "mktdata/msgs/${fname}Message.h"
 
+#include "commonlibs/core/utils/Defines.h"
+#include "commonlibs/core/utils/ObjectStore.h"
 #include "mktdata/include/qb_knk.h"
 #include "externaldeps/kdb/include/k.h"
 
@@ -19,7 +18,8 @@ using namespace QB::MktData::${fname};
 #define KDBL(v)  (is_qb_null(v) ? nf : v)
 #define KLONG(v) (is_qb_null(v) ? nj : v)
 
-%for name in modules:
+% for messages in attributes['messages']:
+% for name,params in messages.items():
 ${name}::${name}()
 {
   clear();
@@ -27,12 +27,14 @@ ${name}::${name}()
 
 void ${name}::clear()
 {
-%for field in modules[name]:
- %if field.keys()[0] == 'string':
-  STR_NULL(${field.values()[0]});
+%for field in params['fields']:
+% if 'type' in field:
+ %if field['type'] == 'string':
+   STR_NULL(${field['name']});
  %else:
-  SET_NULL(${field.values()[0]});
+   SET_NULL(${field['name']});
  %endif
+%endif
 %endfor
 }
 
@@ -40,18 +42,32 @@ K ${name}::to_k(vector<QMessage*>& v) const
 {
   int size = (int) v.size();
   K x = qb_knk(
-%for field in modules[name]:
-        %if field.keys()[0] == 'int32_t' or field.keys()[0] == 'uint32_t':
+%for field in params['fields']:
+% if loop.last:
+        %if field['type'] == 'int32_t' or field['type'] == 'uint32_t':
+               ktn(KI, size)
+        %elif field['type'] == 'int64_t' or field['type'] == 'uint64_t':
+               ktn(KJ, size)
+        %elif field['type'] == 'double':
+               ktn(KF, size)
+        %elif field['type'] == 'string':
+               ktn(KS, size)
+        %elif field['type'] == 'time_t':
+               ktn(KP, size)
+        %endif
+% else:
+        %if field['type'] == 'int32_t' or field['type'] == 'uint32_t':
                ktn(KI, size),
-        %elif field.keys()[0] == 'int64_t' or field.keys()[0] == 'uint64_t':
+        %elif field['type'] == 'int64_t' or field['type'] == 'uint64_t':
                ktn(KJ, size),
-        %elif field.keys()[0] == 'double':
+        %elif field['type'] == 'double':
                ktn(KF, size),
-        %elif field.keys()[0] == 'string':
+        %elif field['type'] == 'string':
                ktn(KS, size),
-        %elif field.keys()[0] == 'time_t':
+        %elif field['type'] == 'time_t':
                ktn(KP, size),
         %endif
+% endif
 %endfor
              );
 
@@ -59,18 +75,20 @@ K ${name}::to_k(vector<QMessage*>& v) const
     {
       ${fname}::${name}* q = (${fname}::${name}*)v[i];
 
-%for field in modules[name]:
-   %if field.keys()[0] == 'int32_t' or field.keys()[0] =='uint32_t':
-      kI(xK[${loop.index}])[i] = KINT(q->${field.values()[0]});
-   %elif field.keys()[0] == 'int64_t' or field.keys()[0] =='uint64_t':
-      kJ(xK[${loop.index}])[i] = KLONG(q->${field.values()[0]});
-   %elif field.keys()[0] == 'double':
-      kF(xK[${loop.index}])[i] = KDBL(q->${field.values()[0]});
-   %elif field.keys()[0] == 'string':
-      kS(xK[${loop.index}])[i] = KSTR(q->${field.values()[0]});
-   %elif field.keys()[0] == 'time_t':
-      kJ(xK[${loop.index}])[i] = KTIME(q->${field.values()[0]});
+%for field in params['fields']:
+% if 'type' in field:
+   %if field['type'] == 'int32_t' or field['type'] =='uint32_t':
+      kI(xK[${loop.index}])[i] = KINT(q->${field['name']});
+   %elif field['type'] == 'int64_t' or field['type'] =='uint64_t':
+      kJ(xK[${loop.index}])[i] = KLONG(q->${field['name']});
+   %elif field['type'] == 'double':
+      kF(xK[${loop.index}])[i] = KDBL(q->${field['name']});
+   %elif field['type'] == 'string':
+      kS(xK[${loop.index}])[i] = KSTR(q->${field['name']});
+   %elif field['type'] == 'time_t':
+      kJ(xK[${loop.index}])[i] = KTIME(q->${field['name']});
    %endif
+%endif
 %endfor
     }
   return x;
@@ -79,15 +97,21 @@ K ${name}::to_k(vector<QMessage*>& v) const
 void ${name}::print() const
 {
   LOG_INFO(tableName()<<": "
-%for field in modules[name]:
-           << ${field.values()[0]} << ", "
+%for field in params['fields']:
+% if loop.last:
+           << ${field['name']}
+% else:
+           << ${field['name']} << ", "
+% endif
 %endfor
            ) ;
 }
 
 ostream& ${name}::operator >> (ostream& os)
 {
-  os<<"tablename: "<<tableName()<<", ";
+%if 'name' in params:
+  os<<"tablename: "<<tableName()<< "${params['name']}";
+%endif
   return os;
 }
 
@@ -101,8 +125,8 @@ bool QB::MktData::${fname}::put(QB::Core::IOPacket& p, const ${name}& v)
 {
   bool ret = true;
 
-%for field in modules[name]:
-  ret&=put(p,v.${field.values()[0]});
+%for field in params['fields']:
+  ret&=put(p,v.${field['name']});
 %endfor
 
   return ret;
@@ -112,11 +136,12 @@ bool QB::MktData::${fname}::get(QB::Core::IOPacket& p, ${name}& v)
 {
   bool ret = true;
 
-%for field in modules[name]:
-  ret&=get(p,v.${field.values()[0]});
+%for field in params['fields']:
+  ret&=get(p,v.${field['name']});
 %endfor
 
   return ret;
 }
 
-%endfor
+% endfor
+% endfor

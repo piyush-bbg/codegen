@@ -1,28 +1,47 @@
-// This is an auto generated file created from QB code generator v1.0.0
-#ifndef __QB_MKTDATA_${fname}MESSAGE_H
-#define __QB_MKTDATA_${fname}MESSAGE_H
+#ifndef ${attributes['prefix_hpp_guard']}_MESSAGE_HPP
+#define ${attributes['prefix_hpp_guard']}_MESSAGE_HPP
+
+% if len(attributes['external_includes']) > 0:
+// Additional includes
+% for file in attributes['external_includes']:
+#include "${file}"
+% endfor
+% endif
 
 #include <unordered_map>
 #include <string>
 #include <vector>
-
-#include "core/utils/Timestamp.h"
-#include "mktdata/msgs/QMessage.h"
-#include "mktdata/msgs/Messages.h"
+#include <stdint.h>
 
 using namespace QB::Core;
 using namespace std;
 
-namespace QB { namespace MktData { namespace ${fname} {
+% for namespace in attributes['namespaces']:
+namespace ${namespace} {
+% endfor
 
-typedef int64_t time_t;
+% if len(attributes['typedefs']) > 0:
+/*  
+ * typedefs.
+ */
+% for typedef in attributes['typedefs'].items():
+${'typedef %s %s;' % ( typedef[1], typedef[0])}
+% endfor
+% endif
 
-% for name in modules:
+% for messages in attributes['messages']:
+% for name,params in messages.items():
 struct ${name} : public QMessage
 {
-%for field in modules[name]:
-  ${field.keys()[0]} ${field.values()[0]};
-%endfor
+% for field in params['fields']:
+% if 'type' in field:
+% if 'size' in field:
+  ${'%s %s[%s];' % (field['type'], field['name'], field['size'])}
+% else:
+  ${'%s %s;' % (field['type'], field['name'])}
+% endif
+% endif
+% endfor
 
   ${name}();
   void clear();
@@ -37,7 +56,10 @@ bool put(IOPacket& p, const ${name}& v);
 bool get(IOPacket& p, ${name}& v);
 ostream& operator << (ostream& os,
                       const QB::MktData::${fname}::${name}& obj);
-
 % endfor
-}}} // namespace QB::MktData::Core
+% endfor
+
+% for namespace in reversed(attributes['namespaces']):
+} // namespace ${namespace}
+% endfor        
 #endif
